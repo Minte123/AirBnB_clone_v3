@@ -1,35 +1,40 @@
 #!/usr/bin/python3
 """
-Sets up Flask application
-
+API for AirBnB_clone_v3
 """
 
-
-from os import getenv
-from flask import Flask, make_response, jsonify
+import os
+from flask import Flask, jsonify, Response
 from flask_cors import CORS
-
-from api.v1.views import app_views
 from models import storage
-
+from api.v1.views import app_views
 app = Flask(__name__)
-CORS(app, orgins='0.0.0.0')
 app.register_blueprint(app_views)
-
-
-@app.errorhandler(404)
-def page_not_found(error):
-    """Returns JSON error repsponse"""
-    return make_response(jsonify({'error': 'Not found'}), 404)
+cors = CORS(app, resources={r"/*": {"origins": "0.0.0.0"}})
 
 
 @app.teardown_appcontext
 def teardown(self):
-    """Closes storage session"""
+    """ handles teardown """
     storage.close()
 
 
+@app.errorhandler(404)
+def page_not_found(e):
+    """ handles 404 errors """
+    status = {"error": "Not found"}
+    return jsonify(status), 404
+
+
 if __name__ == '__main__':
-    api_host = getenv('HBNB_API_HOST', default='0.0.0.0')
-    api_port = getenv('HBNB_API_PORT', default=5000)
-    app.run(host=api_host, port=int(api_port), threaded=True)
+    try:
+        host = os.environ.get('HBNB_API_HOST')
+    except:
+        host = '0.0.0.0'
+
+    try:
+        port = os.environ.get('HBNB_API_PORT')
+    except:
+        port = '5000'
+
+    app.run(host=host, port=port)
